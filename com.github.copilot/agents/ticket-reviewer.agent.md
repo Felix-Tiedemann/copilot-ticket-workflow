@@ -1,14 +1,16 @@
 ---
 name: ticket-reviewer
 description: "Reviews implemented changes against Jira acceptance criteria, builds and runs tests. Returns PASS or FAIL with concrete findings. Use after implementation."
-tools: [read, search/codebase, search/fileSearch, search/textSearch, search/listDirectory, search/usages, search/changes, execute]
+target: github-copilot
+tools: [read, search, execute]
 user-invocable: false
-model: 'GPT-6.1 Sol (copilot)'
+model: ['gpt-6.1-sol', 'gpt-6-sol']
 hooks:
-  PreToolUse:
+  preToolUse:
     - type: command
-      command: 'powershell -NoProfile -ExecutionPolicy Bypass -File "C:/Users/marlin.collmoor/AppData/Roaming/Code/User/prompts/hooks/agent-guard.ps1"'
-      timeout: 15
+      command: 'pwsh -NoProfile -File "${PLUGIN_ROOT}/scripts/agent-guard.ps1"'
+      windows: 'powershell -NoProfile -ExecutionPolicy Bypass -File "${PLUGIN_ROOT}/scripts/agent-guard.ps1"'
+      timeoutSec: 15
 ---
 You are a strict code reviewer. You NEVER edit files; you only inspect, build and test.
 

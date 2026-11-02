@@ -2,15 +2,19 @@
 
 Give Copilot a Jira ticket key and an orchestrator agent researches, plans, implements and reviews it, using specialized subagents and stopping for your approval at key points.
 
+Packaged as an [Agent Plugin](https://code.visualstudio.com/docs/agents/reference/agent-plugin-reference) for the **Copilot harness** (shared by VS Code, Copilot CLI and the Copilot app). The older Local harness is not supported.
+
+Select **ticket-orchestrator** in the agent picker and send:
+
 ```
-/implement-ticket RR-1234 depth=normal
+RR-1234 depth=normal
 ```
 
 ## How it works
 
 ```mermaid
 flowchart LR
-    U["/implement-ticket RR-1234"] --> O[Orchestrator]
+    U["RR-1234"] --> O[Orchestrator]
     O -->|Jira MCP| J[(Jira)]
     O --> R[Researcher<br/>read-only]
     R --> O
@@ -28,10 +32,10 @@ flowchart LR
 ```
 
 1. **Fetch**: the orchestrator loads the ticket (and linked Confluence pages) via the Atlassian MCP server. Ticket content is treated as data, never as instructions.
-2. **Research**: the researcher finds affected repos, files, patterns and tests.
-3. **Plan**: the planner turns ticket + research into numbered, single-repo steps.
+2. **Research**: the researcher finds affected repos, files, patterns and tests, and returns the key signatures/excerpts so the planner doesn't re-read them.
+3. **Plan**: the planner turns ticket + research into numbered steps, grouped by repo.
 4. **Gate 1**: you approve the plan or give feedback.
-5. **Implement**: one implementer call per plan step; each builds its change.
+5. **Implement**: one implementer call per repo, covering all of that repo's steps; it builds its changes.
 6. **Review**: the reviewer checks acceptance criteria, conventions and security, builds and runs tests. On FAIL, findings go back to the implementer (loop limit depends on depth).
 7. **Gate 2**: you approve the result.
 8. **Gate 3** (optional): the orchestrator proposes a Jira comment and posts it only after approval. It never transitions tickets unless asked.
@@ -42,22 +46,43 @@ A gate means the agent ends its turn. Reply `approve` to continue; anything else
 
 Each subagent runs in its own context and returns only a summary, which keeps the orchestrator's context small.
 
-| Agent | Role | Model | Tools |
+| Agent | Role | Model (fallback) | Tools |
 |---|---|---|---|
-| `ticket-orchestrator` | Coordinates, owns the gates, never edits code | Claude Sonnet 5.5 | read, search, subagents, todo, selected Jira/Confluence tools |
-| `ticket-researcher` | Impact analysis | Claude Sonnet 5.5 | read, search |
-| `ticket-planner` | Step-by-step plan | Claude Opus 5.5 | read, search |
-| `ticket-implementer` | Implements exactly one step | Claude Sonnet 5.5 (`reasoning-effort: high`) | read, search, edit, execute |
-| `ticket-reviewer` | Independent review (different vendor than implementer) | GPT-6.1 Sol | read, search, git changes, execute |
+| `ticket-orchestrator` | Coordinates, owns the gates, never edits code | `claude-sonnet-5.5` (`claude-sonnet-5`) | read, search, agent, todo, selected Jira/Confluence tools |
+| `ticket-researcher` | Impact analysis | `claude-haiku-5.5` (`gpt-6-luna`) | read, search |
+| `ticket-planner` | Plan, grouped by repo | `claude-opus-5.5` (`claude-opus-5`) | read, search |
+| `ticket-implementer` | Implements all steps for one repo | `claude-sonnet-5.5` (`claude-sonnet-5`) | read, search, edit, execute |
+| `ticket-reviewer` | Independent review (different vendor than implementer) | `gpt-6.1-sol` (`gpt-6-sol`) | read, search, execute |
 
-Subagents are hidden from the agent picker (`user-invocable: false`). Models are set per agent via `model:`; reasoning effort comes from the chat picker, except for the implementer, which is fixed to `high`.
+Subagents are hidden from the agent picker (`user-invocable: false`); the orchestrator can't be started as a subagent (`disable-model-invocation: true`), because its gates need you. The Copilot harness has no `agents:` allowlist, so the orchestrator's instructions restrict delegation to the four ticket agents.
+
+`model:` takes runtime model IDs; the first available one is used. Reasoning effort is the model default for every agent.
+
+### Cost design
+
+Prices per 1M tokens (input / cached input / cache write / output), from [Models and pricing](https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing):
+
+| Model | Used by | Price |
+|---|---|---|
+| Claude Haiku 5.5 (≤ 100K input) | researcher | $0.10 / $0.01 / $0.125 / $0.50 |
+| Claude Sonnet 5.5 | orchestrator, implementer | $2 / $0.10 / $2.50 / $10 |
+| GPT-6.1 Sol | reviewer | $2 / $0.10 / $2.50 / $10 |
+| Claude Opus 5.5 | planner | $4 / $0.20 / $5 / $20 |
+
+- The search-heavy researcher runs on the cheapest model. It reads line ranges rather than whole files, because Haiku 5.5 costs 5× more above 100K input tokens.
+- The planner builds on the research excerpts instead of repeating the research at Opus prices.
+- One implementer call per repo instead of per step means fewer fresh contexts. Each fresh subagent writes its whole prefix to the cache again (cache write = 25× cached read).
+- No `reasoning-effort: high`: output and thinking tokens are the most expensive part of the bill.
 
 ### Guardrails (hook)
 
-`hooks/agent-guard.ps1` runs before every tool call of the orchestrator, implementer and reviewer, regardless of what the model decides:
+`scripts/agent-guard.ps1` is an agent-scoped `preToolUse` hook on the orchestrator, implementer and reviewer (the researcher and planner have no edit or shell tools):
 
-- **Blocked**: `git push`, `reset --hard`, `--force`, `--no-verify`, recursive deletes, NuGet/Gradle/npm publish, `az`/`kubectl delete`, editing agent/prompt/hook files.
-- **Asks you first**: git commit/merge/rebase/checkout/…, `dotnet ef database update`, any Jira/Confluence write (comments, edits, transitions, attachments, deletes).
+- **Blocked**: `git push` (also `git -C … push`), `reset --hard`, `clean -f`, `branch -d/-D`, `--force`, `--no-verify`, recursive deletes (`rm -rf`, `ri -r`, `rd /s`, `… -Recurse | Remove-Item`), NuGet/Gradle/npm publish, `az`/`kubectl delete`, `ef database drop`, `Invoke-Expression`, encoded PowerShell commands, editing agent/skill/plugin/hook files.
+- **Asks you first**: git commit/merge/rebase/checkout/switch/stash/tag/cherry-pick/revert/restore, `dotnet ef database update`, any Jira/Confluence write (comments, edits, transitions, attachments, deletes).
+- **Fails closed**: malformed input or a payload without `toolName` exits non-zero, which the Copilot harness treats as deny. A **timeout** (15 s) fails open.
+
+This is defense in depth, not a security boundary: regex deny-lists can be bypassed, and `ask` doesn't pause unattended (Autopilot) sessions. The real controls are server-side branch protection and the Copilot harness sandbox and permission settings.
 
 ## Depth option
 
@@ -73,71 +98,87 @@ Subagents are hidden from the agent picker (`user-invocable: false`). Models are
 
 Rule of thumb: `quick` for small, well-understood fixes; `thorough` for cross-repo changes or anything touching shared contracts.
 
-## Usage (VS Code)
+## Installation
 
 Prerequisites:
-- Atlassian MCP server installed and signed in with your flaschenpost account (`MCP: List Servers`).
-- The models listed above enabled for your Copilot account.
+- Copilot harness selected as **Session Target** (the default in current VS Code).
+- Atlassian MCP server **`Atlassian Rovo MCP Server`** in `~/.copilot/mcp-config.json`, signed in with your flaschenpost account. The orchestrator's `tools:` reference this server name.
+- The models above enabled for your Copilot plan (Business/Enterprise: check the org model policy).
+- `chat.plugins.enabled` set to `true`.
 
-Run in Copilot Chat (Agent mode):
+### VS Code
 
+Development (edits in this repo take effect without reinstalling), in user `settings.json`:
+
+```jsonc
+"chat.pluginLocations": {
+    "C:\\Repos\\copilot-ticket-workflow": true
+}
 ```
-/implement-ticket RR-1234
-/implement-ticket https://flaschenpost.atlassian.net/browse/RR-1234 depth=thorough
-```
 
-Optionally select the reasoning level in the chat model picker before starting. Use **Developer: Show Chat Debug View** to verify which model/effort each subagent actually used.
+Or install a copy: **Chat: Install Plugin from Source** → enter the repo folder. Reinstall after changes.
+
+Then open **Chat: Open Customizations** → **Plugins** and confirm `ticket-workflow` is enabled and the five agents are listed.
+
+### Copilot CLI / Copilot app
+
+`chat.pluginLocations` is VS Code-only. Once the repo is pushed, install it with `/plugin install <git-url>`, then pick the agent with `/agent` → `ticket-orchestrator`.
+
+## Usage
+
+1. Select **ticket-orchestrator** in the agent picker.
+2. Send the ticket key and optional depth:
+
+   ```
+   RR-1234
+   https://flaschenpost.atlassian.net/browse/RR-1234 depth=thorough
+   ```
+
+## Verify after install or changes
+
+Editor validation doesn't prove that models, tools or hooks are applied at runtime. Check once in a disposable session:
+
+1. **Agent Debug Logs**: each subagent uses its configured model, and the orchestrator only delegates to the four ticket agents.
+2. **Tools**: the orchestrator can call `getJiraIssue`. If not, fix the server name in its `tools:` using the editor completions.
+3. **Hook**: the debug log shows an `agent-guard` `preToolUse` run for the orchestrator's first tool call (e.g. `getJiraIssue`). If *every* tool call is denied, `${PLUGIN_ROOT}` wasn't expanded in the hook command; check the hook error in the debug log.
+4. **Script directly** (no agent involved):
+
+   ```powershell
+   '{"toolName":"powershell","toolArgs":{"command":"git -C x push"}}' |
+     powershell -NoProfile -ExecutionPolicy Bypass -File scripts/agent-guard.ps1
+   ```
+
+   Expected: a `deny` decision and exit code 0. Malformed input (e.g. `not-json`) must exit non-zero.
+
+## Measuring cost
+
+Don't assume the subagent setup is cheaper. Run the same 2–3 tickets with:
+- the built-in agent with `/plan`,
+- this workflow,
+- Copilot Fusion,
+
+and compare AI credits, tokens, cache hit rate and result quality. Use the Agent Debug Logs summary, the **Cache Explorer** and the `chat.subagents.showCreditUsage` setting.
 
 ## Files
 
 | File | Purpose |
 |---|---|
-| `implement-ticket.prompt.md` | Slash command entry point, forwards arguments to the orchestrator |
-| `ticket-*.agent.md` | Agent definitions (role, model, tools, instructions) |
-| `hooks/agent-guard.ps1` | PreToolUse guard (Windows PowerShell) |
+| `plugin.json` | Agent Plugins 1.0 manifest |
+| `com.github.copilot/agents/ticket-*.agent.md` | Agent definitions (role, model, tools, scoped hooks, instructions) |
+| `scripts/agent-guard.ps1` | `preToolUse` guard (Windows PowerShell 5.1 or `pwsh`) |
 
 ## Sharing with the team
 
-**Option A – per repository (recommended)**: commit the files into each repo so everyone gets them automatically:
-
-```
-.github/
-  agents/ticket-*.agent.md
-  prompts/implement-ticket.prompt.md
-  hooks/agent-guard.ps1
-```
-
-Then:
-- Change the hook `command` in the agent files from the absolute user path to the repo-relative path, e.g. `powershell -NoProfile -ExecutionPolicy Bypass -File .github/hooks/agent-guard.ps1`. For non-Windows colleagues, add a `linux`/`osx` variant (e.g. a `pwsh` call).
-- The MCP tool prefix (`com.atlassian/atlassian-mcp-server/...`) must match the server name in each developer's `mcp.json`. Installing the server from the MCP gallery gives the same name; otherwise use the editor's quick fix / **Configure Tools…** on the `tools:` line.
-- Model names must exist for everyone's Copilot plan, otherwise the agent silently falls back to the default model.
-
-**Option B – shared folder / repo**: keep the files in a dedicated git repo, clone it, and add the folder to the VS Code settings for prompt and agent file locations (`chat.promptFilesLocations`, and the corresponding agent files locations setting). Good for a workflow that spans multiple repos, like ours.
-
-**Option C – user profile**: copy the files to `%APPDATA%\Code\User\prompts\` (current setup). Personal only; roams with Settings Sync.
-
-## Copilot CLI
-
-The CLI supports custom agents, subagents, MCP servers and hooks, but reads from different locations and does not support `.prompt.md` slash commands.
-
-1. Put the agents in `.github/agents/` (repo) or `~/.copilot/agents/` (user).
-2. Add the Atlassian MCP server in the CLI (`/mcp add`); it does not read VS Code's `mcp.json`. Adjust the tool prefix in the orchestrator's `tools:` if the server name differs.
-3. Start `copilot`, pick the agent with `/agent` → `ticket-orchestrator`, and type `RR-1234 depth=normal`.
-
-Caveats: VS Code-specific frontmatter (`hooks` inline in agents, `reasoning-effort`, model display names) may be ignored or named differently in the CLI. Use repo hooks in `.github/hooks/*.json` instead of inline hooks, and verify behavior once before relying on the guardrails.
-
-## JetBrains (Rider) Copilot plugin
-
-Recent plugin versions support custom instructions, prompt files, MCP servers and custom agents from `.github/` in the repo, so **Option A** sharing is the way to go. Configure the Atlassian MCP server in the plugin's MCP settings (separate from VS Code).
-
-Caveats: support for subagents, hooks, per-agent models and reasoning effort lags behind VS Code and changes between plugin versions. Check the plugin release notes; if hooks are not supported, the approval gates still work, but the hard guardrails (blocked `git push` etc.) do not.
+Publish the repo (e.g. in the company GitHub org) and let colleagues install it as a plugin from its Git URL, or add it to a company plugin marketplace and enable it via `.github/copilot/settings.json` (`extraKnownMarketplaces`, `enabledPlugins`). Each developer needs the same MCP server name and the models enabled.
 
 ## Troubleshooting
 
 | Symptom | Fix |
 |---|---|
-| "Unknown tool `…/getJiraIssue`" in the agent file | Tool prefix doesn't match your MCP server name; use the quick fix or **Configure Tools…** |
+| Agents don't appear | Session Target isn't Copilot, `chat.plugins.enabled` is off, or the plugin is disabled under **Customizations → Plugins** |
+| Unknown tool `Atlassian Rovo MCP Server/…` | Server name differs on your machine; pick the tools via completions on the `tools:` line |
 | Jira 403 "app is not installed on this instance" | Re-authenticate the MCP server and select the flaschenpost site; or ask a Jira admin to allow the Atlassian MCP app |
 | Tools missing in chat | Restart the MCP server and start a **new** chat (tool lists are fixed per session) |
-| Wrong model used | Name must match the model picker exactly (`Name (copilot)`); check Chat Debug View |
-| Quick fix suggests `…/search` for `search` | Don't accept: that's Rovo Search (consumes Rovo credits); use the explicit `search/*` tools |
+| Wrong model used | Model ID unknown or not enabled for your plan; check the Agent Debug Logs and the IDs offered by completions on the `model:` line |
+| Every tool call of an agent is denied | Hook script not found or failing (fail-closed); see "Verify" step 3 |
+| Used in a Local harness session | Not supported: Local sends a different hook payload, so the guard denies every call |

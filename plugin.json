@@ -1,0 +1,6 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "ticket-workflow",
+  "description": "Implements a Jira ticket end-to-end: orchestrator with researcher, planner, implementer and reviewer subagents, approval gates and a preToolUse guard.",
+  "version": "2.0.0"
+}
