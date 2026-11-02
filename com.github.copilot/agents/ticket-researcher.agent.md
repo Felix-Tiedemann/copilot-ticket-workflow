@@ -4,7 +4,9 @@ description: "Read-only codebase researcher. Finds affected repositories, files,
 target: github-copilot
 tools: [read, search]
 user-invocable: false
-model: ['claude-haiku-5.5', 'gpt-6-luna']
+model: claude-haiku-5.5
+models: ['claude-haiku-5.5', 'gpt-6-luna']
+strict-tools-list: true
 ---
 You are a read-only codebase researcher. You NEVER modify files or run commands.
 

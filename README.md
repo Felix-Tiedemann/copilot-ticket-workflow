@@ -50,13 +50,17 @@ Each subagent runs in its own context and returns only a summary, which keeps th
 |---|---|---|---|
 | `ticket-orchestrator` | Coordinates, owns the gates, never edits code | `claude-sonnet-5.5` (`claude-sonnet-5`) | read, search, agent, todo, selected Jira/Confluence tools |
 | `ticket-researcher` | Impact analysis | `claude-haiku-5.5` (`gpt-6-luna`) | read, search |
-| `ticket-planner` | Plan, grouped by repo | `claude-opus-5.5` (`claude-opus-5`) | read, search |
+| `ticket-planner` | Plan, grouped by repo | `claude-opus-5.5` (`gpt-6-astra`) | read, search |
 | `ticket-implementer` | Implements all steps for one repo | `claude-sonnet-5.5` (`claude-sonnet-5`) | read, search, edit, execute |
 | `ticket-reviewer` | Independent review (different vendor than implementer) | `gpt-6.1-sol` (`gpt-6-sol`) | read, search, execute |
 
 Subagents are hidden from the agent picker (`user-invocable: false`); the orchestrator can't be started as a subagent (`disable-model-invocation: true`), because its gates need you. The Copilot harness has no `agents:` allowlist, so the orchestrator's instructions restrict delegation to the four ticket agents.
 
-`model:` takes runtime model IDs; the first available one is used. Reasoning effort is the model default for every agent.
+Models use runtime IDs. VS Code reads `model:` (one model); Copilot CLI reads `models:` (first available one is used, so the fallback only applies there). Reasoning effort is the model default for every agent.
+
+CLI-specific fields, ignored by VS Code:
+- `strict-tools-list: true` on the orchestrator, researcher and planner, so the CLI doesn't add its default tools to the read-only agents.
+- Subagents don't get the repo's AGENTS.md automatically in the CLI. The implementer and reviewer therefore read AGENTS.md and `.github/copilot-instructions.md` of the target repo themselves, which also works in multi-repo workspaces.
 
 ### Cost design
 
@@ -108,7 +112,11 @@ Prerequisites:
 
 ### VS Code
 
-Development (edits in this repo take effect without reinstalling), in user `settings.json`:
+1. **Chat: Install Plugin from Source** → paste the repo URL (`https://github.com/<your-account>/copilot-ticket-workflow`). VS Code clones and installs it; no manual clone needed.
+2. **Chat: Open Customizations** → **Plugins**: confirm `ticket-workflow` is enabled and the five agents are listed.
+3. Updates: **Check for and Apply Updates** (refresh icon) under Plugins, or **Chat: Update Plugins**.
+
+Contributing to the plugin? Clone the repo and register the clone instead, so your edits take effect without reinstalling (user `settings.json`):
 
 ```jsonc
 "chat.pluginLocations": {
@@ -116,13 +124,27 @@ Development (edits in this repo take effect without reinstalling), in user `sett
 }
 ```
 
-Or install a copy: **Chat: Install Plugin from Source** → enter the repo folder. Reinstall after changes.
+### Copilot CLI
 
-Then open **Chat: Open Customizations** → **Plugins** and confirm `ticket-workflow` is enabled and the five agents are listed.
+1. Add the Atlassian MCP server with exactly this name (the CLI opens the OAuth sign-in on first use):
 
-### Copilot CLI / Copilot app
+   ```powershell
+   copilot mcp add --transport http "Atlassian Rovo MCP Server" https://mcp.atlassian.com/v1/mcp
+   ```
 
-`chat.pluginLocations` is VS Code-only. Once the repo is pushed, install it with `/plugin install <git-url>`, then pick the agent with `/agent` → `ticket-orchestrator`.
+2. Install the plugin: `copilot plugin install <owner>/copilot-ticket-workflow` (or a Git URL, or a local path for development).
+3. Start it in the repo folder: `copilot --agent ticket-orchestrator`, then send `RR-1234 depth=normal`. Inside a session: `/agent` → `ticket-orchestrator`.
+4. Costs: `/usage` shows tokens and AI credits per model, `/tasks` the running subagents.
+
+`copilot plugin list` and `/env` show whether the plugin, agents and hooks were loaded.
+
+### Copilot app
+
+Install the plugin under **Customize** → plugins, or open a CLI session in the app with `/app`.
+
+### JetBrains (Rider)
+
+Not supported: JetBrains IDEs can't install agent plugins and don't run hooks (no guardrails). Use the Copilot CLI in Rider's terminal instead.
 
 ## Usage
 

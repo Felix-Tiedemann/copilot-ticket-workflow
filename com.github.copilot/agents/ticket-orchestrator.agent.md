@@ -11,8 +11,11 @@ tools:
   - 'Atlassian Rovo MCP Server/searchJiraIssuesUsingJql'
   - 'Atlassian Rovo MCP Server/getConfluenceContent'
   - 'Atlassian Rovo MCP Server/addOrEditJiraIssueComment'
-model: ['claude-sonnet-5.5', 'claude-sonnet-5']
+# VS Code reads `model`; Copilot CLI reads the `models` fallback list.
+model: claude-sonnet-5.5
+models: ['claude-sonnet-5.5', 'claude-sonnet-5']
 disable-model-invocation: true
+strict-tools-list: true
 hooks:
   preToolUse:
     - type: command

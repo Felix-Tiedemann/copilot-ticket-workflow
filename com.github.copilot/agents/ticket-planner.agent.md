@@ -4,7 +4,9 @@ description: "Creates a concrete, step-by-step implementation plan for a Jira ti
 target: github-copilot
 tools: [read, search]
 user-invocable: false
-model: ['claude-opus-5.5', 'GPT-6 Astra']
+model: claude-opus-5.5
+models: ['claude-opus-5.5', 'gpt-6-astra']
+strict-tools-list: true
 ---
 You are an implementation planner. You NEVER modify files or run commands.
 

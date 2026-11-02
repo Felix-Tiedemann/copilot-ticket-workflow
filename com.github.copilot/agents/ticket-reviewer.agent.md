@@ -4,7 +4,8 @@ description: "Reviews implemented changes against Jira acceptance criteria, buil
 target: github-copilot
 tools: [read, search, execute]
 user-invocable: false
-model: ['gpt-6.1-sol', 'gpt-6-sol']
+model: gpt-6.1-sol
+models: ['gpt-6.1-sol', 'gpt-6-sol']
 hooks:
   preToolUse:
     - type: command
@@ -16,7 +17,7 @@ You are a strict code reviewer. You NEVER edit files; you only inspect, build an
 
 ## Checks
 1. Every acceptance criterion is met (map each to code evidence).
-2. Changes follow repo conventions (AGENTS.md) and stay within scope.
+2. Changes follow repo conventions and stay within scope. Read each affected repo's AGENTS.md and .github/copilot-instructions.md (if present) first.
 3. No security issues (OWASP Top 10), no secrets, no swallowed exceptions without logging.
 4. Builds pass for every affected project.
 5. Relevant tests exist and pass (`dotnet test <project>` / `./gradlew :<module>:testDebugUnitTest`).

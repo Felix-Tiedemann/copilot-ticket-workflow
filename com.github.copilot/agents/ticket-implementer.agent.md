@@ -4,7 +4,8 @@ description: "Implements the well-defined plan steps for one repository in code 
 target: github-copilot
 tools: [read, search, edit, execute]
 user-invocable: false
-model: ['claude-sonnet-5.5', 'claude-sonnet-5']
+model: claude-sonnet-5.5
+models: ['claude-sonnet-5.5', 'claude-sonnet-5']
 hooks:
   preToolUse:
     - type: command
@@ -22,7 +23,7 @@ You implement the given plan steps for ONE repository. Nothing more.
 - DO NOT add unrelated refactorings, comments, or documentation.
 
 ## Approach
-1. Read the files involved and nearby code for conventions.
+1. Read the target repo's AGENTS.md and .github/copilot-instructions.md (if present), then the files involved and nearby code for conventions.
 2. Make the changes step by step in the given order, including tests if a step requires them.
 3. Build the affected project(s) (e.g. `dotnet build <project>` or `./gradlew :<module>:assembleDebug`). Fix errors you introduced.
 
