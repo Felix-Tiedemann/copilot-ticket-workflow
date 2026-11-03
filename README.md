@@ -140,7 +140,13 @@ Contributing to the plugin? Clone the repo and register the clone instead, so yo
 
 ### Copilot app
 
-Install the plugin under **Customize** → plugins, or open a CLI session in the app with `/app`.
+The app installs plugins only from marketplaces, so this repo is also a one-plugin marketplace (`.github/plugin/marketplace.json`, name `copilot-ticket-workflow`):
+
+1. **Customize** → marketplace settings control next to the marketplace dropdown → add the repo (`<your-account>/copilot-ticket-workflow` or its Git URL). The repo must be pushed; you need read access and must be signed in to GitHub in the app.
+2. Search **Browse** for `ticket-workflow` → **Install**.
+3. Check **Customize** → **Installed** that it's enabled, then pick **ticket-orchestrator** in the agent picker.
+
+Keep `version` in `marketplace.json` in sync with `plugin.json`.
 
 ### JetBrains (Rider)
 
