@@ -105,14 +105,13 @@ Rule of thumb: `quick` for small, well-understood fixes; `thorough` for cross-re
 ## Installation
 
 Prerequisites:
-- Copilot harness selected as **Session Target** (the default in current VS Code).
 - Atlassian MCP server **`Atlassian Rovo MCP Server`** in `~/.copilot/mcp-config.json`, signed in with your flaschenpost account. The orchestrator's `tools:` reference this server name.
 - The models above enabled for your Copilot plan (Business/Enterprise: check the org model policy).
 - `chat.plugins.enabled` set to `true`.
 
 ### VS Code
 
-1. **Chat: Install Plugin from Source** → paste the repo URL (`https://github.com/<your-account>/copilot-ticket-workflow`). VS Code clones and installs it; no manual clone needed.
+1. **Chat: Install Plugin from Source** → paste the repo URL (`https://github.com/MarlinCollmoorFP/copilot-ticket-workflow`). VS Code clones and installs it; no manual clone needed.
 2. **Chat: Open Customizations** → **Plugins**: confirm `ticket-workflow` is enabled and the five agents are listed.
 3. Updates: **Check for and Apply Updates** (refresh icon) under Plugins, or **Chat: Update Plugins**.
 
@@ -132,7 +131,7 @@ Contributing to the plugin? Clone the repo and register the clone instead, so yo
    copilot mcp add --transport http "Atlassian Rovo MCP Server" https://mcp.atlassian.com/v1/mcp
    ```
 
-2. Install the plugin: `copilot plugin install <owner>/copilot-ticket-workflow` (or a Git URL, or a local path for development).
+2. Install the plugin: `copilot plugin install MarlinCollmoorFP/copilot-ticket-workflow` (or a Git URL, or a local path for development).
 3. Start it in the repo folder: `copilot --agent ticket-orchestrator`, then send `RR-1234 depth=normal`. Inside a session: `/agent` → `ticket-orchestrator`.
 4. Costs: `/usage` shows tokens and AI credits per model, `/tasks` the running subagents.
 
@@ -142,7 +141,7 @@ Contributing to the plugin? Clone the repo and register the clone instead, so yo
 
 The app installs plugins only from marketplaces, so this repo is also a one-plugin marketplace (`.github/plugin/marketplace.json`, name `copilot-ticket-workflow`):
 
-1. **Customize** → marketplace settings control next to the marketplace dropdown → add the repo (`<your-account>/copilot-ticket-workflow` or its Git URL). The repo must be pushed; you need read access and must be signed in to GitHub in the app.
+1. **Customize** → marketplace settings control next to the marketplace dropdown → add the repo (`MarlinCollmoorFP/copilot-ticket-workflow` or its Git URL). The repo must be pushed; you need read access and must be signed in to GitHub in the app.
 2. Search **Browse** for `ticket-workflow` → **Install**.
 3. Check **Customize** → **Installed** that it's enabled, then pick **ticket-orchestrator** in the agent picker.
 
