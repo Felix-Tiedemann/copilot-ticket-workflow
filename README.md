@@ -147,6 +147,14 @@ The app installs plugins only from marketplaces, so this repo is also a one-plug
 2. Search **Browse** for `ticket-workflow` → **Install**.
 3. Check **Customize** → **Installed** that it's enabled, then pick **ticket-orchestrator** in the agent picker.
 
+### Rider Copilot Plugin
+
+1. Clone the repository
+2. Configure agents in Rider
+3. Add the path to the repository checkout 
+![alt text](image.png)
+![alt text](image-1.png)
+
 ### Publishing an update
 
 Before pushing, bump `version` in both `plugin.json` and the `marketplace.json` entry (same value), as the VS Code plugin docs require for updates.
@@ -207,6 +215,7 @@ Publish the repo (e.g. in the company GitHub org) and let colleagues install it 
 | Symptom | Fix |
 |---|---|
 | Agents don't appear | Session Target isn't Copilot, `chat.plugins.enabled` is off, or the plugin is disabled under **Customizations → Plugins** |
+| Copilot app: "Failed to install plugin … files may be in use" | VS Code, the app and the CLI share `~/.copilot/installed-plugins`, and a running client keeps the plugin loaded. Close VS Code and other Copilot clients, then retry. If it still fails, quit the app, delete `~/.copilot/installed-plugins/copilot-ticket-workflow/ticket-workflow`, restart and install again |
 | Unknown tool `Atlassian Rovo MCP Server/…` | Server name differs on your machine; pick the tools via completions on the `tools:` line |
 | Jira 403 "app is not installed on this instance" | Re-authenticate the MCP server and select the flaschenpost site; or ask a Jira admin to allow the Atlassian MCP app |
 | Tools missing in chat | Restart the MCP server and start a **new** chat (tool lists are fixed per session) |
