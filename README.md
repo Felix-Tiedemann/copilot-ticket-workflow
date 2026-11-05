@@ -206,10 +206,6 @@ and compare AI credits, tokens, cache hit rate and result quality. Use the Agent
 | `com.github.copilot/agents/ticket-*.agent.md` | Agent definitions (role, model, tools, scoped hooks, instructions) |
 | `scripts/agent-guard.ps1` | `preToolUse` guard (Windows PowerShell 5.1 or `pwsh`) |
 
-## Sharing with the team
-
-Publish the repo (e.g. in the company GitHub org) and let colleagues install it as a plugin from its Git URL, or add it to a company plugin marketplace and enable it via `.github/copilot/settings.json` (`extraKnownMarketplaces`, `enabledPlugins`). Each developer needs the same MCP server name and the models enabled.
-
 ## Troubleshooting
 
 | Symptom | Fix |
