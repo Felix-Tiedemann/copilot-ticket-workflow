@@ -1,6 +1,6 @@
 ---
 name: ticket-planner
-description: "Creates a concrete, step-by-step implementation plan for a Jira ticket from ticket details and research results. Use after research, before implementation."
+description: "Internal worker of ticket-orchestrator only. Do not invoke unless you are ticket-orchestrator. Turns ticket details and research into an implementation plan."
 target: github-copilot
 tools: [read, search]
 user-invocable: false

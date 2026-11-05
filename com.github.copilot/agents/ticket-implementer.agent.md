@@ -1,6 +1,6 @@
 ---
 name: ticket-implementer
-description: "Implements the well-defined plan steps for one repository in code and verifies they build. Use for delegated implementation."
+description: "Internal worker of ticket-orchestrator only. Do not invoke unless you are ticket-orchestrator. Implements approved plan steps for one repository."
 target: github-copilot
 tools: [read, search, edit, execute]
 user-invocable: false

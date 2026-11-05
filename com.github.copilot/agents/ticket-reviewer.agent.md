@@ -1,6 +1,6 @@
 ---
 name: ticket-reviewer
-description: "Reviews implemented changes against Jira acceptance criteria, builds and runs tests. Returns PASS or FAIL with concrete findings. Use after implementation."
+description: "Internal worker of ticket-orchestrator only. Do not invoke unless you are ticket-orchestrator. Reviews changes against Jira acceptance criteria; returns PASS or FAIL."
 target: github-copilot
 tools: [read, search, execute]
 user-invocable: false

@@ -56,6 +56,8 @@ Each subagent runs in its own context and returns only a summary, which keeps th
 
 Subagents are hidden from the agent picker (`user-invocable: false`); the orchestrator can't be started as a subagent (`disable-model-invocation: true`), because its gates need you. The Copilot harness has no `agents:` allowlist, so the orchestrator's instructions restrict delegation to the four ticket agents.
 
+The Copilot harness can't limit a subagent to one caller either. `disable-model-invocation: true` on the workers would block the orchestrator too (the Local harness's `agents:` exception doesn't exist there). Instead, the worker descriptions, which every agent sees when choosing a subagent, say they're orchestrator-only. This is guidance, not enforcement: the default agent can still call them if you ask it to explicitly.
+
 Models use runtime IDs. VS Code reads `model:` (one model); Copilot CLI reads `models:` (first available one is used, so the fallback only applies there). Reasoning effort is the model default for every agent.
 
 CLI-specific fields, ignored by VS Code:

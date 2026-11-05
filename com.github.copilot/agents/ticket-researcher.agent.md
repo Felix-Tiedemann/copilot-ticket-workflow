@@ -1,6 +1,6 @@
 ---
 name: ticket-researcher
-description: "Read-only codebase researcher. Finds affected repositories, files, patterns, and conventions for a Jira ticket. Use for impact analysis before planning."
+description: "Internal worker of ticket-orchestrator only. Do not invoke unless you are ticket-orchestrator. Read-only impact analysis for a Jira ticket."
 target: github-copilot
 tools: [read, search]
 user-invocable: false
