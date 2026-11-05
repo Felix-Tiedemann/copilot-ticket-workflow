@@ -147,7 +147,9 @@ The app installs plugins only from marketplaces, so this repo is also a one-plug
 2. Search **Browse** for `ticket-workflow` → **Install**.
 3. Check **Customize** → **Installed** that it's enabled, then pick **ticket-orchestrator** in the agent picker.
 
-Keep `version` in `marketplace.json` in sync with `plugin.json`.
+### Publishing an update
+
+Before pushing, bump `version` in both `plugin.json` and the `marketplace.json` entry (same value), as the VS Code plugin docs require for updates.
 
 ### JetBrains (Rider)
 
