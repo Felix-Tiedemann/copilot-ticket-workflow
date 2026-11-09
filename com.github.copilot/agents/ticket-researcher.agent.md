@@ -20,6 +20,7 @@ tools:
   - 'JetBrains Rider MCP Server/get_file_problems'
   - 'JetBrains Rider MCP Server/get_class_hierarchy'
   - 'datadog/*'
+  - 'temporal-docs/*'
 user-invocable: false
 model: claude-haiku-5.5
 models: ['claude-haiku-5.5', 'gpt-6-luna']

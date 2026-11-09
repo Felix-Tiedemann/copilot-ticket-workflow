@@ -14,6 +14,7 @@ tools:
   - 'JetBrains Rider MCP Server/get_solution_projects'
   - 'JetBrains Rider MCP Server/get_repositories'
   - 'JetBrains Rider MCP Server/git_status'
+  - 'temporal-docs/*'
 # VS Code reads `model`; Copilot CLI reads the `models` fallback list.
 model: claude-sonnet-5.5
 models: ['claude-sonnet-5.5', 'claude-sonnet-5']

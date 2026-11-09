@@ -26,6 +26,7 @@ tools:
   - 'JetBrains Rider MCP Server/build_solution_state'
   - 'JetBrains Rider MCP Server/get_run_configurations'
   - 'JetBrains Rider MCP Server/execute_run_configuration'
+  - 'temporal-docs/*'
 
 [//]: # (strict-tools-list: true)
 user-invocable: false

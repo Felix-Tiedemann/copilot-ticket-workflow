@@ -28,6 +28,7 @@ tools:
   - 'JetBrains Rider MCP Server/get_run_configurations'
   - 'JetBrains Rider MCP Server/execute_run_configuration'
   - 'datadog/*'
+  - 'temporal-docs/*'
 
 user-invocable: false
 model: claude-sonnet-5.5
