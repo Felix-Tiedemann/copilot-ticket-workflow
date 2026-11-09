@@ -19,6 +19,7 @@ tools:
   - 'JetBrains Rider MCP Server/get_project_problems'
   - 'JetBrains Rider MCP Server/get_file_problems'
   - 'JetBrains Rider MCP Server/get_class_hierarchy'
+  - 'datadog/*'
 user-invocable: false
 model: claude-opus-5.5
 models: ['claude-opus-5.5', 'gpt-6-astra']

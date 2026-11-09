@@ -49,9 +49,9 @@ Each subagent runs in its own context and returns only a summary, which keeps th
 | Agent | Role | Model (fallback) | Tools |
 |---|---|---|---|
 | `ticket-orchestrator` | Coordinates, owns the gates, never edits code | `claude-sonnet-5.5` (`claude-sonnet-5`) | read, search, agent, todo, selected Jira/Confluence tools, Rider project/repository status |
-| `ticket-researcher` | Impact analysis | `claude-haiku-5.5` (`gpt-6-luna`) | read/search and read-only Rider project/code insight |
-| `ticket-planner` | Plan, grouped by repo | `claude-opus-5.5` (`gpt-6-astra`) | read/search and read-only Rider project/code insight |
-| `ticket-implementer` | Implements all steps for one repo | `claude-sonnet-5.5` (`claude-sonnet-5`) | read, search, edit, execute, Rider code insight, formatting, build and run configurations |
+| `ticket-researcher` | Impact analysis | `claude-haiku-5.5` (`gpt-6-luna`) | read/search, read-only Rider project/code insight, Datadog |
+| `ticket-planner` | Plan, grouped by repo | `claude-opus-5.5` (`gpt-6-astra`) | read/search, read-only Rider project/code insight, Datadog |
+| `ticket-implementer` | Implements all steps for one repo | `claude-sonnet-5.5` (`claude-sonnet-5`) | read, search, edit, execute, Rider code insight, formatting, build and run configurations, Datadog |
 | `ticket-reviewer` | Independent review (different vendor than implementer) | `gpt-6.1-sol` (`gpt-6-sol`) | read, search, execute, Rider code insight, lint, build and run configurations |
 
 Subagents are hidden from the agent picker (`user-invocable: false`); the orchestrator can't be started as a subagent (`disable-model-invocation: true`), because its gates need you. The Copilot harness has no `agents:` allowlist, so the orchestrator's instructions restrict delegation to the four ticket agents.
@@ -109,6 +109,7 @@ Rule of thumb: `quick` for small, well-understood fixes; `thorough` for cross-re
 Prerequisites:
 - Atlassian MCP server **`Atlassian Rovo MCP Server`** in `~/.copilot/mcp-config.json`, signed in with your flaschenpost account. The orchestrator's `tools:` reference this server name.
 - JetBrains Rider's MCP server enabled and configured in the Copilot client's MCP inventory with the name **`JetBrains Rider MCP Server`**. The agents have role-scoped Rider tools: read-only project/code insight for research and planning, plus build/test tools for implementation and review.
+- Datadog MCP server configured in the Copilot client's MCP inventory under the key **`datadog`**. The researcher, planner and implementer receive its tools.
 - The models above enabled for your Copilot plan (Business/Enterprise: check the org model policy).
 - `chat.plugins.enabled` set to `true`.
 
