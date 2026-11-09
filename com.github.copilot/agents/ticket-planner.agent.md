@@ -2,7 +2,23 @@
 name: ticket-planner
 description: "Internal worker of ticket-orchestrator only. Do not invoke unless you are ticket-orchestrator. Turns ticket details and research into an implementation plan."
 target: github-copilot
-tools: [read, search]
+tools:
+  - read
+  - search
+  - 'JetBrains Rider MCP Server/get_solution_projects'
+  - 'JetBrains Rider MCP Server/get_repositories'
+  - 'JetBrains Rider MCP Server/list_directory_tree'
+  - 'JetBrains Rider MCP Server/search_file'
+  - 'JetBrains Rider MCP Server/search_regex'
+  - 'JetBrains Rider MCP Server/search_symbol'
+  - 'JetBrains Rider MCP Server/search_text'
+  - 'JetBrains Rider MCP Server/read_file'
+  - 'JetBrains Rider MCP Server/get_symbol_info'
+  - 'JetBrains Rider MCP Server/findTests'
+  - 'JetBrains Rider MCP Server/get_project_dependencies'
+  - 'JetBrains Rider MCP Server/get_project_problems'
+  - 'JetBrains Rider MCP Server/get_file_problems'
+  - 'JetBrains Rider MCP Server/get_class_hierarchy'
 user-invocable: false
 model: claude-opus-5.5
 models: ['claude-opus-5.5', 'gpt-6-astra']

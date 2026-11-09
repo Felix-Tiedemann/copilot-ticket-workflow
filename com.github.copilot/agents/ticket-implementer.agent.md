@@ -2,7 +2,33 @@
 name: ticket-implementer
 description: "Internal worker of ticket-orchestrator only. Do not invoke unless you are ticket-orchestrator. Implements approved plan steps for one repository."
 target: github-copilot
-tools: [read, search, edit, execute]
+tools:
+  - read
+  - search
+  - edit
+  - execute
+  - 'JetBrains Rider MCP Server/get_solution_projects'
+  - 'JetBrains Rider MCP Server/get_repositories'
+  - 'JetBrains Rider MCP Server/list_directory_tree'
+  - 'JetBrains Rider MCP Server/search_file'
+  - 'JetBrains Rider MCP Server/search_regex'
+  - 'JetBrains Rider MCP Server/search_symbol'
+  - 'JetBrains Rider MCP Server/search_text'
+  - 'JetBrains Rider MCP Server/read_file'
+  - 'JetBrains Rider MCP Server/get_symbol_info'
+  - 'JetBrains Rider MCP Server/findTests'
+  - 'JetBrains Rider MCP Server/get_project_dependencies'
+  - 'JetBrains Rider MCP Server/get_project_problems'
+  - 'JetBrains Rider MCP Server/get_file_problems'
+  - 'JetBrains Rider MCP Server/get_class_hierarchy'
+  - 'JetBrains Rider MCP Server/reformat_file'
+  - 'JetBrains Rider MCP Server/lint_files'
+  - 'JetBrains Rider MCP Server/build_solution_start'
+  - 'JetBrains Rider MCP Server/build_solution_state'
+  - 'JetBrains Rider MCP Server/get_run_configurations'
+  - 'JetBrains Rider MCP Server/execute_run_configuration'
+
+[//]: # (strict-tools-list: true)
 user-invocable: false
 model: claude-sonnet-5.5
 models: ['claude-sonnet-5.5', 'claude-sonnet-5']
